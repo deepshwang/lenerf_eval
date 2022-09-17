@@ -1,0 +1,38 @@
+Average edit success rate: 0.571
+00000.png : 
+Success!
+logit before edit: 0.00
+logit after edit: 1.00
+
+00001.png : 
+Success!
+logit before edit: 0.01
+logit after edit: 1.00
+
+00002.png : 
+Failure
+logit before edit: 0.00
+logit after edit: 0.00
+
+00003.png : 
+Success!
+logit before edit: 0.01
+logit after edit: 1.00
+
+00004.png : 
+Failure
+logit before edit: 0.00
+logit after edit: 0.00
+
+00005.png : 
+Success!
+logit before edit: 0.00
+logit after edit: 1.00
+
+00006.png : 
+Original image is not completely negative
+
+00007.png : 
+Failure
+logit before edit: 0.00
+logit after edit: 0.00
