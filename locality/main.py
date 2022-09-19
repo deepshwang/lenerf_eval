@@ -8,6 +8,7 @@ from torchvision import transforms, utils
 from PIL import Image
 import os
 from tqdm import tqdm
+import math
 
 remap_list_celebahq = torch.tensor([0, 1, 6, 7, 4, 5, 2, 2, 10, 11, 12, 8, 9, 15, 3, 17, 16, 18, 13, 14]).float()
 remap_list = torch.tensor([0, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 9, 10, 11, 12, 13, 14, 15, 16]).float()
@@ -58,6 +59,8 @@ def face_parsing(img_path, bisNet, to_tensor):
     seg_mask = seg_label.detach().cpu().numpy()
     return tf_resize(to_tensor(img)), seg_mask
 
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Inference")
     parser.add_argument("--original_image_dir", type=str, default=None,
@@ -77,6 +80,8 @@ if __name__ == "__main__":
     edited_imgs = glob.glob(args.edited_image_dir  + "/*.png")
     in_mses = []
     out_mses = []
+    in_mses_nonan=[]
+    out_mses_nonan=[]
     for orig, edit in tqdm(zip(orig_imgs, edited_imgs)):
         orig_image, orig_att = face_parsing(orig, bisNet, to_tensor)
         edit_image, edit_att = face_parsing(edit, bisNet, to_tensor)
@@ -95,18 +100,23 @@ if __name__ == "__main__":
         total_area = np.prod(ref_mask.shape)
 
         ## In - MSE
-        in_mse = ((orig_image * ref_mask) - (edit_image * ref_mask))**2 / ref_mask_area
-        in_mses.append(torch.sum(in_mse).item())
+        in_mse = torch.nn.functional.mse_loss(orig_image*ref_mask, edit_image*ref_mask) * total_area / ref_mask_area
+        in_mses.append(in_mse.item())
+        if not torch.isnan(in_mse):
+            in_mses_nonan.append(in_mse.item())
         ## Out - MSE
-        out_mse = ((orig_image * (ref_mask == False)) - (edit_image * (ref_mask == False)))**2 / (total_area - ref_mask_area)
-        out_mses.append(torch.sum(out_mse).item())
+        out_mse = torch.nn.functional.mse_loss(orig_image * (ref_mask == False), edit_image * (ref_mask == False)) * total_area / (total_area - ref_mask_area)
+        out_mses.append(out_mse.item())
+        if not torch.isnan(out_mse):
+            out_mses_nonan.append(out_mse.item())
 
-    with open(args.log_dir + "/{}_in_out_mse.txt".format(args.locality_text), 'w') as f:
+    #with open(args.log_dir + "/{}_in_out_mse.txt".format(args.locality_text), 'w') as f:
+    with open(args.log_dir, 'w') as f:
         f.write("Evaluation text: {}".format(args.locality_text))
         f.write("\n")
-        f.write("Mean in-mse: {:.3f}".format(sum(in_mses)/len(in_mses)))
+        f.write("Mean in-mse: {:.3f}".format(sum(in_mses_nonan)/len(in_mses_nonan)))
         f.write("\n")
-        f.write("Mean out-mse: {:.3f}".format(sum(out_mses)/len(out_mses)))
+        f.write("Mean out-mse: {:.3f}".format(sum(out_mses_nonan)/len(out_mses_nonan)))
         for i in range(3):
             f.write("\n")
         for i in range(len(orig_imgs)):
