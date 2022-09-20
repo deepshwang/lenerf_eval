@@ -77,7 +77,7 @@ def main(args):
     
     # data
     dataset = AttributePairDataset(args.original_image_dir, args.edited_image_dir)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=2, shuffle=False, num_workers=4)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=False, num_workers=4)
 
     eval_thres = float(args.eval_thres)
     orig_probs = []
@@ -102,7 +102,8 @@ def main(args):
     edit_pos_idx = torch.where(edit_probs_valid > eval_thres)[0]
     success_rate = edit_pos_idx.shape[0] / orig_probs_valid.shape[0]
     
-    with open(os.path.join(args.log_dir, "eval_stats_{}.txt".format(args.attribute_text)), 'w') as f:
+    #with open(os.path.join(args.log_dir, "eval_stats_{}.txt".format(args.attribute_text)), 'w') as f:
+    with open(args.log_dir, 'w') as f:
         f.write("Average edit success rate: {:.3f}".format(success_rate))
         f.write("\n")
         for i in range(len(dataset)):
@@ -137,4 +138,5 @@ if __name__ == '__main__':
     parser.add_argument("--log_dir", type=str, default=None,
                         help="file to log evaluation output")
     args = parser.parse_args()
-    main(args)
+    with torch.no_grad():
+        main(args)
