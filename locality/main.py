@@ -18,9 +18,11 @@ att_channel_dict = {'background': [0],
                     'nose': [2],
                     'eyes': [4, 5],
                     'eyebrows': [6,7],
+                    'ears': [8,9],
                     'mouth': [10, 11, 12],
                     'lips': [11, 12],
-                    'hair': [13]}
+                    'hair': [13],
+                    'face': [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]}
 
 
 def id_remap(seg, type='sof'):

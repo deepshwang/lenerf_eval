@@ -27,7 +27,7 @@ attr_dict = {'5_o_clock_shadow': 0,
              'double_chin': 14,
              'eyeglasses': 15,
              'goatee': 16,
-             'gray_hair': 17,
+             'grey_hair': 17,
              'heavy_makeup': 18, 
              'high_cheekbones': 19,
              'male': 20,
@@ -82,6 +82,8 @@ def main(args):
     eval_thres = float(args.eval_thres)
     orig_probs = []
     edit_probs = []
+    fail_thres = (1-eval_thres) * 0.5
+    success_thres = (1-eval_thres) * 2
     for i, (orig, edit) in tqdm(enumerate(dataloader), total=len(dataloader)):
         orig = orig.to('cuda')
         edit = edit.to('cuda')
@@ -94,14 +96,14 @@ def main(args):
         edit_probs.append(edit_prob)
     orig_probs = torch.cat(tuple(orig_probs))
     edit_probs = torch.cat(tuple(edit_probs))
-    orig_neg_idx = torch.where(orig_probs < (1-eval_thres))[0]
+    orig_neg_idx = torch.where(orig_probs < fail_thres)[0]
     
     # Redefine a subset where the original is definitely negative given an attribute
     orig_probs_valid = orig_probs[orig_neg_idx]
     edit_probs_valid = edit_probs[orig_neg_idx]
-    edit_pos_idx = torch.where(edit_probs_valid > eval_thres)[0]
+    #edit_pos_idx = torch.where(edit_probs_valid > eval_thres)[0]
+    edit_pos_idx = torch.where(edit_probs_valid > success_thres)[0]
     success_rate = edit_pos_idx.shape[0] / orig_probs_valid.shape[0]
-    
     #with open(os.path.join(args.log_dir, "eval_stats_{}.txt".format(args.attribute_text)), 'w') as f:
     with open(args.log_dir, 'w') as f:
         f.write("Average edit success rate: {:.3f}".format(success_rate))
@@ -110,7 +112,7 @@ def main(args):
             if i not in orig_neg_idx:
                 msg = 'Original image is not completely negative'
             else:
-                if edit_probs[i] > eval_thres:
+                if edit_probs[i] > success_thres:
                     msg = 'Success!\n'
                 else:
                     msg = 'Failure\n'
