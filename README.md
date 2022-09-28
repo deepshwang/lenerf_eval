@@ -66,3 +66,15 @@ logit after edit: 0.00
 00006.png : 
 Original image is not completely negative
 ```
+
+# FID
+1. Set the following directories in `evaluate.sh`
+    *  **REAL_DIR** : Directory that includes real images from dataset.
+    *  **ORIG_DIR** : Directory that includes generated images before editing.
+    *  **EDIT_DIR** : Directory that includes edited images after editing.
+    *  **LOG_DIR** : Directory to save the evaluation result as text file.
+
+
+3. Run `bash fid/evaluate.sh ${DEVICE_NUM} ${EDIT_PROMPT}`
+    * **DEVICE_NUM**: gpu device number to run on 
+    * **EDIT_PROMPT**: editing text to test for
